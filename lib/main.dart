@@ -127,6 +127,30 @@ class _HomePasswordState extends State<HomePassword> {
     initItems();
   }
 
+  void showToast(context, msg, {Color color = Colors.green}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        // action: SnackBarAction(
+        //   label: 'Action',
+        //   onPressed: () {
+        //     // Code to execute.
+        //   },
+        // ),
+        content: Center(child: Text(msg)),
+        duration: const Duration(milliseconds: 1000),
+        width: 280.0, // Width of the SnackBar.
+        padding: const EdgeInsets.symmetric(
+          horizontal: 8.0, // Inner padding for SnackBar content.
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        backgroundColor: color,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -268,6 +292,7 @@ class _HomePasswordState extends State<HomePassword> {
               setState(() {
                 _appValidate = false;
               });
+              showToast(context, "请输入App名称", color: Colors.red);
             } else {
               await db.updateOrInsert(PasswordItem(
                   name: _controllerApp.text,
@@ -285,6 +310,7 @@ class _HomePasswordState extends State<HomePassword> {
 
                 _appValidate = true;
               });
+              showToast(context, "${_controllerApp.text} 密码已生成");
             }
           },
           child: const Text("生成密码")),
