@@ -41,7 +41,7 @@ String getPassword(String inKey, String inCode) {
   // convert to upper case
   for (var i = 0; i < 32; i++) {
     if (!isNumeric(source[i])) {
-      if (STR3.indexOf(rule[i]) > -1) {
+      if (STR3.contains(rule[i])) {
         source[i] = source[i].toUpperCase();
       }
     }
@@ -52,7 +52,7 @@ String getPassword(String inKey, String inCode) {
   if (!isNumeric(firstChar)) {
     pwd = pwd32.substring(0, 16);
   } else {
-    pwd = 'K' + pwd32.substring(1, 16);
+    pwd = 'K${pwd32.substring(1, 16)}';
   }
   return pwd;
 }
