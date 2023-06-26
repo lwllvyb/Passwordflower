@@ -289,7 +289,7 @@ class _HomePasswordState extends State<HomePassword> {
           ),
         ],
       )),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
           tooltip: "just test",
           onPressed: () async {
             var pwd = getPassword(_controllerKey.text,
@@ -315,7 +315,8 @@ class _HomePasswordState extends State<HomePassword> {
               showToast(context, "${_controllerApp.text} 密码已生成");
             }
           },
-          child: const Text("生成密码")),
+          label: const Text("生成密码")),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
