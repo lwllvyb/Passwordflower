@@ -176,4 +176,17 @@ class FlowerDB {
       whereArgs: [name],
     );
   }
+
+  // 获取最新一条记录的key
+  getLatestKey() async {
+    var items = await db.query(
+      TABLE,
+      orderBy: "lasttime DESC",
+      limit: 1,
+    );
+    if (items.isNotEmpty) {
+      return items[0]['key'];
+    }
+    return "";
+  }
 }

@@ -114,6 +114,11 @@ class _HomePasswordState extends State<HomePassword> {
             items = value;
           })
         });
+    db.getLatestKey().then((value) => {
+          setState(() {
+            _controllerKey.text = value;
+          })
+        });
   }
 
   @override
@@ -138,7 +143,7 @@ class _HomePasswordState extends State<HomePassword> {
             SizedBox(
               // height: 120,
               width: 320,
-              child: TextField(
+              child: TextFormField(
                 controller: _controllerKey,
                 obscureText: _isObscure,
                 decoration: InputDecoration(
@@ -213,7 +218,7 @@ class _HomePasswordState extends State<HomePassword> {
                           //     // Code to execute.
                           //   },
                           // ),
-                          content: Center(child: const Text('复制成功')),
+                          content: const Center(child: Text('复制成功')),
                           duration: const Duration(milliseconds: 1000),
                           width: 280.0, // Width of the SnackBar.
                           padding: const EdgeInsets.symmetric(
