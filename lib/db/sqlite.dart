@@ -189,4 +189,16 @@ class FlowerDB {
     }
     return "";
   }
+
+  getLatestZone() async {
+    var items = await db.query(
+      TABLE,
+      orderBy: "lasttime DESC",
+      limit: 1,
+    );
+    if (items.isNotEmpty) {
+      return items[0]['zone'];
+    }
+    return "";
+  }
 }

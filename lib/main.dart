@@ -96,7 +96,6 @@ class _HomePasswordState extends State<HomePassword> {
   final _controllerZone = TextEditingController();
   final _controllerPwd = TextEditingController();
   late List<PasswordItem> items = <PasswordItem>[];
-  bool _appValidate = false;
   bool _isObscure = true;
   @override
   void dispose() {
@@ -119,6 +118,11 @@ class _HomePasswordState extends State<HomePassword> {
     db.getLatestKey().then((value) => {
           setState(() {
             _controllerKey.text = value;
+          })
+        });
+    db.getLatestZone().then((value) => {
+          setState(() {
+            _controllerZone.text = value;
           })
         });
   }
@@ -291,9 +295,7 @@ class _HomePasswordState extends State<HomePassword> {
             var pwd = getPassword(_controllerKey.text,
                 _controllerApp.text + _controllerZone.text);
             if (_controllerApp.text.isEmpty) {
-              setState(() {
-                _appValidate = false;
-              });
+              setState(() {});
               showToast(context, "请输入App名称", color: Colors.red);
             } else {
               await db.updateOrInsert(PasswordItem(
@@ -309,8 +311,6 @@ class _HomePasswordState extends State<HomePassword> {
                 items = itemsTmp;
                 // 打印 items 信息，开发模式下
                 // ignore: avoid_print
-
-                _appValidate = true;
               });
               showToast(context, "${_controllerApp.text} 密码已生成");
             }
