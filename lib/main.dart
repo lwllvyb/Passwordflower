@@ -26,33 +26,35 @@ bool isNumeric(String s) {
 // ignore: constant_identifier_names
 const STR3 = 'sunlovesnow1990090127xykab';
 String getPassword(String inKey, String inCode) {
-  final key = utf8.encode(inKey);
-  final code = utf8.encode(inCode);
+  var key = utf8.encode(inKey);
+  var code = utf8.encode(inCode);
 
-  final hmacMd5 = Hmac(md5, code); // HMAC-SHA256
-  final one = hmacMd5.convert(key);
-  final two = Hmac(md5, utf8.encode("$one")).convert(utf8.encode("snow"));
-  final three = Hmac(md5, utf8.encode("$one")).convert(utf8.encode("kise"));
-  final rule = "$three".split('');
-  final source = "$two".split('');
-  final pwd = StringBuffer();
+  var hmacMd5 = Hmac(md5, code); // HMAC-SHA256
+  var one = hmacMd5.convert(key);
+  hmacMd5 = Hmac(md5, utf8.encode("snow"));
+  var two = hmacMd5.convert(utf8.encode("$one"));
+  hmacMd5 = Hmac(md5, utf8.encode("kise"));
+  var three = hmacMd5.convert(utf8.encode("$one"));
+  var rule = "$three".split('');
+  var source = "$two".split('');
+  var pwd = "";
   // convert to upper case
   for (var i = 0; i < 32; i++) {
     if (!isNumeric(source[i])) {
-      if (STR3.contains(rule[i])) {
+      if (STR3.indexOf(rule[i]) > -1) {
         source[i] = source[i].toUpperCase();
       }
     }
   }
-  final pwd32 = source.join('');
-  final firstChar = pwd32.substring(0, 1);
+  var pwd32 = source.join('');
+  var firstChar = pwd32.substring(0, 1);
   // make sure first char is not a number
   if (!isNumeric(firstChar)) {
-    pwd.write(pwd32.substring(0, 16));
+    pwd = pwd32.substring(0, 16);
   } else {
-    pwd.write('K${pwd32.substring(1, 16)}');
+    pwd = 'K' + pwd32.substring(1, 16);
   }
-  return pwd.toString();
+  return pwd;
 }
 
 class MyApp extends StatelessWidget {
@@ -62,7 +64,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Password Flower',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -155,7 +157,7 @@ class _HomePasswordState extends State<HomePassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Welcome to password"),
+        title: const Text("Welcome to Password Flower"),
       ),
       body: Center(
           child: Column(
