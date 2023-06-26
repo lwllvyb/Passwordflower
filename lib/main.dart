@@ -96,7 +96,8 @@ class _HomePasswordState extends State<HomePassword> {
   final _controllerZone = TextEditingController();
   final _controllerPwd = TextEditingController();
   final _controllerSpecial = TextEditingController();
-  final appWidth = 320.0;
+  final height = 50.0;
+  final appWidth = 100.0;
   final zoneWidth = 100.0;
   final specialWidth = 100.0;
   final paddingWidth = 10.0;
@@ -154,9 +155,9 @@ class _HomePasswordState extends State<HomePassword> {
         //     // Code to execute.
         //   },
         // ),
-        content: Center(child: Text(msg)),
+        content: SizedBox(height: 50.0, child: Center(child: Text(msg))),
         duration: const Duration(milliseconds: 1000),
-        width: 280.0, // Width of the SnackBar.
+        width: 200.0, // Width of the SnackBar.
         padding: const EdgeInsets.symmetric(
           horizontal: 8.0, // Inner padding for SnackBar content.
         ),
@@ -184,68 +185,74 @@ class _HomePasswordState extends State<HomePassword> {
         children: <Widget>[
           const Padding(padding: EdgeInsets.all(10.0)),
           // add tow rows, first row is input key, second row is input app and zone, and a button. when click, it will check input and call getPassword, two rows have same width
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-            // 两个输入框相同宽度，并且之间有一定间距
-            SizedBox(
-              // height: 120,
-              width: keyWidth,
-              child: TextFormField(
-                controller: _controllerKey,
-                obscureText: _isObscure,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  labelText: '记忆密码',
-                  suffixIcon: InkWell(
-                    child: Icon(
-                        _isObscure ? Icons.visibility_off : Icons.visibility),
-                    onTap: () => setState(() => _isObscure = !_isObscure),
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: <Widget>[
+              Container(
+                height: height,
+                width: keyWidth,
+                child: TextFormField(
+                  controller: _controllerKey,
+                  obscureText: _isObscure,
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: '记忆密码',
+                    suffixIcon: InkWell(
+                      child: Icon(
+                        _isObscure ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onTap: () => setState(() => _isObscure = !_isObscure),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ]),
+            ],
+          ),
           const Padding(padding: EdgeInsets.all(10.0)),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-            // 两个输入框相同宽度，并且之间有一定间距
-            SizedBox(
-              // height: 100,
-              width: appWidth,
-              child: TextField(
-                controller: _controllerApp,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'App',
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: <Widget>[
+              // 两个输入框相同宽度，并且之间有一定间距
+              Container(
+                height: height,
+                width: appWidth,
+                child: TextField(
+                  controller: _controllerApp,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'App',
+                  ),
                 ),
               ),
-            ),
-            // 占位符
-            Padding(padding: EdgeInsets.all(paddingWidth)),
-            SizedBox(
-              // height: 100,
-              width: zoneWidth,
-              child: TextField(
-                controller: _controllerZone,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '区号',
+              // 占位符
+              Padding(padding: EdgeInsets.all(paddingWidth)),
+              Container(
+                height: height,
+                width: zoneWidth,
+                child: TextField(
+                  controller: _controllerZone,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: '区号',
+                  ),
                 ),
               ),
-            ),
-            // add SizedBox controller is _controllerSpecial, width is 100, height is 100, decoration is border, labelText is '特殊字符'
-            const Padding(padding: EdgeInsets.all(10.0)),
-            SizedBox(
-              // height: 100,
-              width: specialWidth,
-              child: TextField(
-                controller: _controllerSpecial,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: '特殊字符',
+              // add SizedBox controller is _controllerSpecial, width is 100, height is 100, decoration is border, labelText is '特殊字符'
+              const Padding(padding: EdgeInsets.all(10.0)),
+              Container(
+                height: height,
+                width: specialWidth,
+                child: TextField(
+                  controller: _controllerSpecial,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: '特殊字符',
+                  ),
                 ),
               ),
-            ),
-            // add a button, when click, it will check input and call getPassword, align center and has same height with input
-          ]),
+              // add a button, when click, it will check input and call getPassword, align center and has same height with input
+            ],
+          ),
 
           // TextField(
           //   readOnly: true,
@@ -310,7 +317,6 @@ class _HomePasswordState extends State<HomePassword> {
         ],
       )),
       floatingActionButton: FloatingActionButton.extended(
-          tooltip: "just test",
           onPressed: () async {
             var pwd = getPassword(_controllerKey.text,
                     _controllerApp.text + _controllerZone.text) +
