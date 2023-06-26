@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bruno/bruno.dart';
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
@@ -159,10 +161,9 @@ class _HomePasswordState extends State<HomePassword> {
               width: 200,
               child: TextField(
                 controller: _controllerApp,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                   labelText: 'App',
-                  errorText: _appValidate ? null : "App Can't be Empty",
                 ),
               ),
             ),
@@ -174,9 +175,9 @@ class _HomePasswordState extends State<HomePassword> {
               child: TextField(
                 controller: _controllerZone,
                 decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '区号',
-                    counterText: " "),
+                  border: OutlineInputBorder(),
+                  labelText: '区号',
+                ),
               ),
             ),
             // add a button, when click, it will check input and call getPassword, align center and has same height with input
@@ -256,11 +257,11 @@ class _HomePasswordState extends State<HomePassword> {
                 // 打印 items 信息，开发模式下
                 // ignore: avoid_print
 
-                developer.log('This is a log message:{items}');
                 _appValidate = true;
               });
             }
-          }),
+          },
+          child: const Text("生成密码")),
     );
   }
 }

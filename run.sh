@@ -10,15 +10,8 @@ compile() {
 compile
 run() {
     echo "run flutter project"
-    flutter run --debug
+    flutter create --platforms=macos .
+    sed -i '' 's/= 10.11/=13.3.1/g' ./macos/Pods/Pods.xcodeproj/project.pbxproj 
+    flutter build macos
 } 
 run
-# 请帮忙从一行日志中提取··
-# 2021-03-31 16:00:00.000 [INFO] [com.xxx.xxx.xxx]
-
-function getLog() {
-    local log=$1
-    local pattern=$2
-    local result=$(echo $log | grep -oE "$pattern")
-    echo $result
-}

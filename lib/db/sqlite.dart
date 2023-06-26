@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 // import 'package:sqflite_common_ffi_web/sqflite_web.dart';
@@ -59,12 +63,21 @@ class FlowerDB {
   open() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // databaseFactory = databaseFactoryFfi;
     // Open the database and store the reference.
     // open the database, if the table does not exist, create a new table. table conent is :
     // id, name, key, code, zone, password, lasttime
-    var factory = databaseFactoryFfiWeb;
-    db = await factory.openDatabase(DB);
+    late DatabaseFactory factory;
+    if (kIsWeb) {
+      factory = databaseFactoryFfiWeb;
+    } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      factory = databaseFactoryFfi;
+    } else if (Platform.isAndroid || Platform.isIOS) {
+      factory = databaseFactory;
+    } else {
+      throw UnsupportedError('Unsupported platform');
+    }
+    final dbPath = await factory.getDatabasesPath();
+    db = await factory.openDatabase('$dbPath/my_database.db');
     // create table if not exists
     await db.execute(
       "CREATE TABLE IF NOT EXISTS $TABLE("
