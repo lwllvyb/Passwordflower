@@ -205,7 +205,28 @@ class _HomePasswordState extends State<HomePassword> {
                             ClipboardData(text: items[index].password))
                         .then((value) {
                       // 弹窗显示"复制成功"
-                      Fluttertoast.showToast(msg: "复制成功");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          // action: SnackBarAction(
+                          //   label: 'Action',
+                          //   onPressed: () {
+                          //     // Code to execute.
+                          //   },
+                          // ),
+                          content: Center(child: const Text('复制成功')),
+                          duration: const Duration(milliseconds: 1000),
+                          width: 280.0, // Width of the SnackBar.
+                          padding: const EdgeInsets.symmetric(
+                            horizontal:
+                                8.0, // Inner padding for SnackBar content.
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
                     });
                   },
                   child: Row(children: <Widget>[
