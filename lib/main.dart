@@ -95,6 +95,11 @@ class _HomePasswordState extends State<HomePassword> {
   final _controllerApp = TextEditingController();
   final _controllerZone = TextEditingController();
   final _controllerPwd = TextEditingController();
+  final _controllerSpecial = TextEditingController();
+  final appWidth = 320.0;
+  final zoneWidth = 100.0;
+  final specialWidth = 100.0;
+  final paddingWidth = 10.0;
   late List<PasswordItem> items = <PasswordItem>[];
   bool _isObscure = true;
   @override
@@ -115,14 +120,21 @@ class _HomePasswordState extends State<HomePassword> {
             items = value;
           })
         });
-    db.getLatestKey().then((value) => {
+    // db.getLatestKey().then((value) => {
+    //       setState(() {
+    //         _controllerKey.text = value;
+    //       })
+    //     });
+    // db.getLatestZone().then((value) => {
+    //       setState(() {
+    //         _controllerZone.text = value;
+    //       })
+    //     });
+    db.getLatestRecord().then((value) => {
           setState(() {
-            _controllerKey.text = value;
-          })
-        });
-    db.getLatestZone().then((value) => {
-          setState(() {
-            _controllerZone.text = value;
+            _controllerKey.text = value["key"];
+            _controllerZone.text = value["zone"];
+            _controllerSpecial.text = value["special"];
           })
         });
   }
@@ -159,6 +171,10 @@ class _HomePasswordState extends State<HomePassword> {
 
   @override
   Widget build(BuildContext context) {
+    final keyWidth = appWidth +
+        zoneWidth +
+        specialWidth +
+        paddingWidth * 2 * 2; // padding 是两边的
     return Scaffold(
       appBar: AppBar(
         title: const Text("Welcome to Password Flower"),
@@ -172,7 +188,7 @@ class _HomePasswordState extends State<HomePassword> {
             // 两个输入框相同宽度，并且之间有一定间距
             SizedBox(
               // height: 120,
-              width: 320,
+              width: keyWidth,
               child: TextFormField(
                 controller: _controllerKey,
                 obscureText: _isObscure,
@@ -193,7 +209,7 @@ class _HomePasswordState extends State<HomePassword> {
             // 两个输入框相同宽度，并且之间有一定间距
             SizedBox(
               // height: 100,
-              width: 200,
+              width: appWidth,
               child: TextField(
                 controller: _controllerApp,
                 decoration: const InputDecoration(
@@ -203,10 +219,10 @@ class _HomePasswordState extends State<HomePassword> {
               ),
             ),
             // 占位符
-            const Padding(padding: EdgeInsets.all(10.0)),
+            Padding(padding: EdgeInsets.all(paddingWidth)),
             SizedBox(
               // height: 100,
-              width: 100,
+              width: zoneWidth,
               child: TextField(
                 controller: _controllerZone,
                 decoration: const InputDecoration(
@@ -215,20 +231,36 @@ class _HomePasswordState extends State<HomePassword> {
                 ),
               ),
             ),
+            // add SizedBox controller is _controllerSpecial, width is 100, height is 100, decoration is border, labelText is '特殊字符'
+            const Padding(padding: EdgeInsets.all(10.0)),
+            SizedBox(
+              // height: 100,
+              width: specialWidth,
+              child: TextField(
+                controller: _controllerSpecial,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: '特殊字符',
+                ),
+              ),
+            ),
             // add a button, when click, it will check input and call getPassword, align center and has same height with input
           ]),
 
-          TextField(
-            readOnly: true,
-            controller: _controllerPwd,
-            textAlign: TextAlign.center,
-            // decoration:
-            //     InputDecoration(border: OutlineInputBorder(), labelText: '密码'),
+          // TextField(
+          //   readOnly: true,
+          //   controller: _controllerPwd,
+          //   textAlign: TextAlign.center,
+          //   // decoration:
+          //   //     InputDecoration(border: OutlineInputBorder(), labelText: '密码'),
+          // ),
+          const SizedBox(
+            height: 30,
+            child: Center(child: Text("历史记录")),
           ),
-          const Center(child: Text("历史记录")),
           SizedBox(
             height: 300,
-            child: ListView.separated(
+            child: ListView.builder(
               scrollDirection: Axis.vertical,
               shrinkWrap: true,
               padding: const EdgeInsets.all(8),
@@ -240,51 +272,39 @@ class _HomePasswordState extends State<HomePassword> {
                             ClipboardData(text: items[index].password))
                         .then((value) {
                       // 弹窗显示"复制成功"
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          // action: SnackBarAction(
-                          //   label: 'Action',
-                          //   onPressed: () {
-                          //     // Code to execute.
-                          //   },
-                          // ),
-                          content: const Center(child: Text('复制成功')),
-                          duration: const Duration(milliseconds: 1000),
-                          width: 280.0, // Width of the SnackBar.
-                          padding: const EdgeInsets.symmetric(
-                            horizontal:
-                                8.0, // Inner padding for SnackBar content.
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+                      showToast(context, "复制成功");
                     });
                   },
-                  child: Row(children: <Widget>[
-                    Expanded(child: Center(child: Text(items[index].name))),
-                    Expanded(
-                        child: Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(width: 1.0, color: Colors.grey[300]!),
+                        bottom:
+                            BorderSide(width: 1.0, color: Colors.grey[300]!),
+                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        Expanded(child: Center(child: Text(items[index].name))),
+                        Expanded(
+                          child: Center(
                             child: TextFormField(
-                      initialValue: items[index].password,
-                      obscureText: true,
-                      enableInteractiveSelection: false,
-                    )))
-                  ]),
+                              initialValue: items[index].password,
+                              obscureText: true,
+                              enableInteractiveSelection: false,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
-                // return SizedBox(
-                //   height: 20,
-                //   child: Row(children: <Widget>[
-                //     Expanded(child: Center(child: Text(items[index].name))),
-                //     Expanded(child: Center(child: Text(items[index].password)))
-                //   ]),
-                // );
               },
-              separatorBuilder: (BuildContext context, int index) =>
-                  const Divider(),
+              // separatorBuilder: (BuildContext context, int index) =>
+              //     const Divider(),
             ),
           ),
         ],
@@ -293,7 +313,8 @@ class _HomePasswordState extends State<HomePassword> {
           tooltip: "just test",
           onPressed: () async {
             var pwd = getPassword(_controllerKey.text,
-                _controllerApp.text + _controllerZone.text);
+                    _controllerApp.text + _controllerZone.text) +
+                _controllerSpecial.text;
             if (_controllerApp.text.isEmpty) {
               setState(() {});
               showToast(context, "请输入App名称", color: Colors.red);
@@ -301,8 +322,8 @@ class _HomePasswordState extends State<HomePassword> {
               await db.updateOrInsert(PasswordItem(
                   name: _controllerApp.text,
                   key: _controllerKey.text,
-                  code: _controllerApp.text,
                   zone: _controllerZone.text,
+                  special: _controllerSpecial.text,
                   password: pwd));
               var itemsTmp = await db.passwords(15);
               setState(() {

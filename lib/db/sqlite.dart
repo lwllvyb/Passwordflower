@@ -13,8 +13,8 @@ class PasswordItem {
   int id = -1;
   final String name;
   final String key;
-  final String code;
   final String zone;
+  final String special;
   final String password;
   int? lasttime;
 
@@ -22,8 +22,8 @@ class PasswordItem {
     this.lasttime,
     required this.name,
     required this.key,
-    required this.code,
     required this.zone,
+    required this.special,
     required this.password,
   });
 
@@ -33,8 +33,8 @@ class PasswordItem {
     return {
       'name': name,
       'key': key,
-      'code': code,
       'zone': zone,
+      'special': special,
       'password': password,
       'lasttime': lasttime,
     };
@@ -84,8 +84,8 @@ class FlowerDB {
       "id INTEGER PRIMARY KEY,"
       "name TEXT,"
       "key TEXT,"
-      "code TEXT,"
       "zone TEXT,"
+      "special TEXT,"
       "password TEXT,"
       "lasttime INTEGER)",
     );
@@ -120,8 +120,8 @@ class FlowerDB {
         lasttime: maps[i]['lasttime'],
         name: maps[i]['name'],
         key: maps[i]['key'],
-        code: maps[i]['code'],
         zone: maps[i]['zone'],
+        special: maps[i]['special'],
         password: maps[i]['password'],
       );
     });
@@ -198,6 +198,23 @@ class FlowerDB {
     );
     if (items.isNotEmpty) {
       return items[0]['zone'];
+    }
+    return "";
+  }
+
+  // get latest record by lasttime, return key, zone, special
+  getLatestRecord() async {
+    var items = await db.query(
+      TABLE,
+      orderBy: "lasttime DESC",
+      limit: 1,
+    );
+    if (items.isNotEmpty) {
+      return {
+        'key': items[0]['key'],
+        'zone': items[0]['zone'],
+        'special': items[0]['special']
+      };
     }
     return "";
   }
