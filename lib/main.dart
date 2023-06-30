@@ -183,7 +183,7 @@ class _HomePasswordState extends State<HomePassword> {
       body: Center(
           child: Column(
         children: <Widget>[
-          const Padding(padding: EdgeInsets.all(10.0)),
+          Padding(padding: EdgeInsets.all(paddingWidth)),
           // add tow rows, first row is input key, second row is input app and zone, and a button. when click, it will check input and call getPassword, two rows have same width
           Wrap(
             alignment: WrapAlignment.center,
@@ -191,6 +191,7 @@ class _HomePasswordState extends State<HomePassword> {
               Container(
                 height: height,
                 width: keyWidth,
+                margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextFormField(
                   controller: _controllerKey,
                   obscureText: _isObscure,
@@ -208,7 +209,7 @@ class _HomePasswordState extends State<HomePassword> {
               ),
             ],
           ),
-          const Padding(padding: EdgeInsets.all(10.0)),
+          // Padding(padding: EdgeInsets.all(paddingWidth)),
           Wrap(
             alignment: WrapAlignment.center,
             children: <Widget>[
@@ -216,6 +217,7 @@ class _HomePasswordState extends State<HomePassword> {
               Container(
                 height: height,
                 width: appWidth,
+                margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextField(
                   controller: _controllerApp,
                   decoration: const InputDecoration(
@@ -225,10 +227,11 @@ class _HomePasswordState extends State<HomePassword> {
                 ),
               ),
               // 占位符
-              Padding(padding: EdgeInsets.all(paddingWidth)),
+              // Padding(padding: EdgeInsets.all(paddingWidth)),
               Container(
                 height: height,
                 width: zoneWidth,
+                margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextField(
                   controller: _controllerZone,
                   decoration: const InputDecoration(
@@ -238,10 +241,12 @@ class _HomePasswordState extends State<HomePassword> {
                 ),
               ),
               // add SizedBox controller is _controllerSpecial, width is 100, height is 100, decoration is border, labelText is '特殊字符'
-              const Padding(padding: EdgeInsets.all(10.0)),
+              // Padding(padding: EdgeInsets.all(paddingWidth)),
               Container(
                 height: height,
                 width: specialWidth,
+                margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                // padding: EdgeInsets.symmetric(vertical: 10),
                 child: TextField(
                   controller: _controllerSpecial,
                   decoration: const InputDecoration(
@@ -261,9 +266,12 @@ class _HomePasswordState extends State<HomePassword> {
           //   // decoration:
           //   //     InputDecoration(border: OutlineInputBorder(), labelText: '密码'),
           // ),
-          const SizedBox(
-            height: 30,
-            child: Center(child: Text("历史记录")),
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 20),
+            // padding: EdgeInsets.symmetric(vertical: 10),
+            child: Center(
+              child: Text("历史记录"),
+            ),
           ),
           SizedBox(
             height: 300,
