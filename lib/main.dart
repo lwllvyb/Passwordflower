@@ -273,47 +273,85 @@ class _HomePasswordState extends State<HomePassword> {
               padding: const EdgeInsets.all(8),
               itemCount: items.length,
               itemBuilder: (BuildContext context, int index) {
-                return GestureDetector(
-                  onLongPress: () {
-                    Clipboard.setData(
-                            ClipboardData(text: items[index].password))
-                        .then((value) {
-                      // 弹窗显示"复制成功"
-                      showToast(context, "复制成功");
-                    });
+                return Dismissible(
+                  key: Key(items[index].name),
+                  direction: DismissDirection.endToStart,
+                  confirmDismiss: (direction) async {
+                    return await showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("确认删除"),
+                          content: const Text("您确定要删除此项吗？"),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text("取消"),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text("删除"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(width: 1.0, color: Colors.grey[300]!),
-                        bottom:
-                            BorderSide(width: 1.0, color: Colors.grey[300]!),
+                  onDismissed: (direction) async {
+                    await db.delete(items[index].name);
+                    setState(() {
+                      items.removeAt(index);
+                    });
+                    showToast(context, "${items[index].name} 已删除");
+                  },
+                  background: Container(
+                    color: Colors.red,
+                    child: Icon(Icons.delete, color: Colors.white),
+                    alignment: Alignment.centerRight,
+                    padding: EdgeInsets.only(right: 20),
+                  ),
+                  child: GestureDetector(
+                    onLongPress: () {
+                      Clipboard.setData(
+                              ClipboardData(text: items[index].password))
+                          .then((value) {
+                        // 弹窗显示"复制成功"
+                        showToast(context, "复制成功");
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(width: 1.0, color: Colors.grey[300]!),
+                          bottom:
+                              BorderSide(width: 1.0, color: Colors.grey[300]!),
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(child: Center(child: Text(items[index].name))),
-                        Expanded(
-                          child: Center(
-                            child: TextFormField(
-                              initialValue: items[index].password,
-                              obscureText: true,
-                              enableInteractiveSelection: false,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
+                      child: Row(
+                        children: <Widget>[
+                          // Add your widgets here
+                          Expanded(
+                              child: Center(child: Text(items[index].name))),
+                          Expanded(
+                            child: Center(
+                              child: TextFormField(
+                                initialValue: items[index].password,
+                                obscureText: true,
+                                enableInteractiveSelection: false,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
-              // separatorBuilder: (BuildContext context, int index) =>
-              //     const Divider(),
             ),
-          ),
+          )
         ],
       )),
       floatingActionButton: FloatingActionButton.extended(
