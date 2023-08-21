@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/widgets.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -11,6 +9,7 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 class PasswordItem {
   int id = -1;
+  final String alias;
   final String name;
   final String key;
   final String zone;
@@ -20,6 +19,7 @@ class PasswordItem {
 
   PasswordItem({
     this.lasttime,
+    required this.alias,
     required this.name,
     required this.key,
     required this.zone,
@@ -31,6 +31,7 @@ class PasswordItem {
   // columns in the database.
   Map<String, dynamic> toMap() {
     return {
+      'alias': alias,
       'name': name,
       'key': key,
       'zone': zone,
@@ -82,6 +83,7 @@ class FlowerDB {
     await db.execute(
       "CREATE TABLE IF NOT EXISTS $TABLE("
       "id INTEGER PRIMARY KEY,"
+      "alias TEXT,"
       "name TEXT,"
       "key TEXT,"
       "zone TEXT,"
@@ -118,6 +120,7 @@ class FlowerDB {
     return List.generate(maps.length, (i) {
       return PasswordItem(
         lasttime: maps[i]['lasttime'],
+        alias: maps[i]['alias'],
         name: maps[i]['name'],
         key: maps[i]['key'],
         zone: maps[i]['zone'],

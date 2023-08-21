@@ -1,12 +1,7 @@
-import 'dart:io';
-
-import 'package:bruno/bruno.dart';
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:convert';
-import 'dart:developer' as developer;
 
 import './db/sqlite.dart';
 
@@ -92,6 +87,7 @@ class HomePassword extends StatefulWidget {
 
 class _HomePasswordState extends State<HomePassword> {
   final _controllerKey = TextEditingController();
+  final _controllerAlias = TextEditingController();
   final _controllerApp = TextEditingController();
   final _controllerZone = TextEditingController();
   final _controllerPwd = TextEditingController();
@@ -191,7 +187,8 @@ class _HomePasswordState extends State<HomePassword> {
               Container(
                 height: height,
                 width: keyWidth,
-                margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextFormField(
                   controller: _controllerKey,
                   obscureText: _isObscure,
@@ -217,7 +214,21 @@ class _HomePasswordState extends State<HomePassword> {
               Container(
                 height: height,
                 width: appWidth,
-                margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                child: TextField(
+                  controller: _controllerAlias,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Alias',
+                  ),
+                ),
+              ),
+              Container(
+                height: height,
+                width: appWidth,
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextField(
                   controller: _controllerApp,
                   decoration: const InputDecoration(
@@ -231,7 +242,8 @@ class _HomePasswordState extends State<HomePassword> {
               Container(
                 height: height,
                 width: zoneWidth,
-                margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextField(
                   controller: _controllerZone,
                   decoration: const InputDecoration(
@@ -245,7 +257,8 @@ class _HomePasswordState extends State<HomePassword> {
               Container(
                 height: height,
                 width: specialWidth,
-                margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 // padding: EdgeInsets.symmetric(vertical: 10),
                 child: TextField(
                   controller: _controllerSpecial,
@@ -267,9 +280,9 @@ class _HomePasswordState extends State<HomePassword> {
           //   //     InputDecoration(border: OutlineInputBorder(), labelText: '密码'),
           // ),
           Container(
-            margin: EdgeInsets.symmetric(vertical: 20),
+            margin: const EdgeInsets.symmetric(vertical: 20),
             // padding: EdgeInsets.symmetric(vertical: 10),
-            child: Center(
+            child: const Center(
               child: Text("历史记录"),
             ),
           ),
@@ -310,49 +323,94 @@ class _HomePasswordState extends State<HomePassword> {
                     setState(() {
                       items.removeAt(index);
                     });
+                    // ignore: use_build_context_synchronously
                     showToast(context, "${items[index].name} 已删除");
                   },
                   background: Container(
                     color: Colors.red,
-                    child: Icon(Icons.delete, color: Colors.white),
                     alignment: Alignment.centerRight,
-                    padding: EdgeInsets.only(right: 20),
+                    padding: const EdgeInsets.only(right: 20),
+                    child: const Icon(Icons.delete, color: Colors.white),
                   ),
-                  child: GestureDetector(
-                    onLongPress: () {
-                      Clipboard.setData(
-                              ClipboardData(text: items[index].password))
-                          .then((value) {
-                        // 弹窗显示"复制成功"
-                        showToast(context, "复制成功");
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(width: 1.0, color: Colors.grey[300]!),
-                          bottom:
-                              BorderSide(width: 1.0, color: Colors.grey[300]!),
-                        ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(width: 1.0, color: Colors.grey[300]!),
+                        bottom:
+                            BorderSide(width: 1.0, color: Colors.grey[300]!),
                       ),
-                      child: Row(
-                        children: <Widget>[
-                          // Add your widgets here
-                          Expanded(
-                              child: Center(child: Text(items[index].name))),
-                          Expanded(
-                            child: Center(
-                              child: TextFormField(
-                                initialValue: items[index].password,
-                                obscureText: true,
-                                enableInteractiveSelection: false,
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                    ),
+                    child: GestureDetector(
+                      onLongPressStart: (details) {
+                        final Offset position =
+                            details.globalPosition; // 获取长按的全局坐标
+                        showMenu(
+                          context: context,
+                          position: RelativeRect.fromLTRB(position.dx,
+                              position.dy, position.dx, position.dy),
+                          items: [
+                            const PopupMenuItem(
+                                child: Text("Edit"), value: 'Edit'),
+                            const PopupMenuItem(
+                                child: Text("Copy"), value: 'Copy')
+                          ],
+                        ).then((value) {
+                          if (value == 'Edit') {
+                          } else if (value == "Copy") {
+                            Clipboard.setData(
+                                ClipboardData(text: items[index].password));
+                            showToast(
+                                context, "${items[index].alias} 密码, 已复制到剪贴板");
+                          }
+                        });
+                      },
+                      child: ExpansionTile(
+                        title: Row(
+                          children: <Widget>[
+                            // Add your widgets here
+                            Expanded(
+                                child: Center(child: Text(items[index].alias))),
+                            Expanded(
+                                child: Center(child: Text(items[index].name))),
+
+                            // Expanded(
+                            //   child: Center(
+                            //     child: GestureDetector(
+                            //       onLongPressStart: (details) {
+                            //         final Offset position =
+                            //             details.globalPosition; // 获取长按的全局坐标
+                            //         showMenu(
+                            //           context: context,
+                            //           position: RelativeRect.fromLTRB(
+                            //               position.dx,
+                            //               position.dy,
+                            //               position.dx,
+                            //               position.dy),
+                            //           items: [
+                            //             const PopupMenuItem(
+                            //                 child: Text("Edit"), value: 'Edit'),
+                            //             const PopupMenuItem(
+                            //                 child: Text("Copy"), value: 'Copy')
+                            //           ],
+                            //         ).then((value) {
+                            //           showToast(context, "value: ${value}");
+                            //           if (value == 'Edit') {
+                            //           } else if (value == "Copy") {}
+                            //         });
+                            //       },
+                            //       child: TextButton(
+                            //         onPressed: () {
+                            //           Clipboard.setData(ClipboardData(
+                            //               text: items[index].password));
+                            //           showToast(context, "已复制到剪贴板");
+                            //         },
+                            //         child: const Text("复制密码"),
+                            //       ),
+                            //     ),
+                            //   ),
+                            // ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -372,6 +430,7 @@ class _HomePasswordState extends State<HomePassword> {
               showToast(context, "请输入App名称", color: Colors.red);
             } else {
               await db.updateOrInsert(PasswordItem(
+                  alias: _controllerAlias.text,
                   name: _controllerApp.text,
                   key: _controllerKey.text,
                   zone: _controllerZone.text,
@@ -385,6 +444,7 @@ class _HomePasswordState extends State<HomePassword> {
                 // 打印 items 信息，开发模式下
                 // ignore: avoid_print
               });
+              // ignore: use_build_context_synchronously
               showToast(context, "${_controllerApp.text} 密码已生成");
             }
           },
