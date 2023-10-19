@@ -48,6 +48,16 @@ class PasswordItem {
   String toString() {
     return 'password: $password, name: $name ';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is PasswordItem && other.name == name && other.alias == alias;
+  }
+
+  @override
+  int get hashCode => name.hashCode ^ alias.hashCode;
 }
 
 class FlowerDB {

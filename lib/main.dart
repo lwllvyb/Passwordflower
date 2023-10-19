@@ -1,7 +1,10 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 import './db/sqlite.dart';
 
@@ -11,6 +14,10 @@ void main() async {
   db.open();
   //var db = FlowerDB("test");
   //await db.open();
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -97,7 +104,9 @@ class _HomePasswordState extends State<HomePassword> {
   final zoneWidth = 100.0;
   final specialWidth = 100.0;
   final paddingWidth = 10.0;
-  late List<PasswordItem> items = <PasswordItem>[];
+
+  late Set<PasswordItem> items_set = {};
+  late List<PasswordItem> items = [];
   bool _isObscure = true;
   @override
   void dispose() {
@@ -112,11 +121,11 @@ class _HomePasswordState extends State<HomePassword> {
     if (!db.isOpen) {
       await db.open();
     }
-    db.passwords(15).then((value) => {
-          setState(() {
-            items = value;
-          })
-        });
+    // db.passwords(15).then((value) => {
+    //       setState(() {
+    //         items = value;
+    //       })
+    //     });
     // db.getLatestKey().then((value) => {
     //       setState(() {
     //         _controllerKey.text = value;
@@ -127,13 +136,39 @@ class _HomePasswordState extends State<HomePassword> {
     //         _controllerZone.text = value;
     //       })
     //     });
-    db.getLatestRecord().then((value) => {
-          setState(() {
-            _controllerKey.text = value["key"];
-            _controllerZone.text = value["zone"];
-            _controllerSpecial.text = value["special"];
-          })
-        });
+    // db.getLatestRecord().then((value) => {
+    //       setState(() {
+    //         _controllerKey.text = value["app"].toString();
+    //         _controllerZone.text = value["zone"].toString();
+    //         _controllerSpecial.text = value["special"].toString();
+    //       })
+    //     });
+    const user = "flower/124";
+    const keyCode = "1QAZ3edc";
+    const zone = "#123";
+    DatabaseReference ref = FirebaseDatabase.instance.ref(user);
+    print("TEST build");
+    ref.onValue.listen((event) {
+      Map<String, dynamic> data = event.snapshot.value as Map<String, dynamic>;
+      Set<PasswordItem> itemsSet = {};
+      data.forEach((key, value) {
+        var item = value;
+        var password =
+            getPassword(keyCode, item['app'] + zone) + item['special'];
+        print("listen item: ${item} ${item.runtimeType} password: ${password}");
+        itemsSet.add(PasswordItem(
+            alias: item['alias'],
+            name: item['app'],
+            key: key,
+            zone: zone,
+            special: item['special'],
+            password: password));
+      });
+      print("items: ${itemsSet}");
+      setState(() {
+        items = itemsSet.toList();
+      });
+    });
   }
 
   @override
@@ -172,6 +207,7 @@ class _HomePasswordState extends State<HomePassword> {
         zoneWidth +
         specialWidth +
         paddingWidth * 2 * 2; // padding 是两边的
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Welcome to Password Flower"),
@@ -350,9 +386,9 @@ class _HomePasswordState extends State<HomePassword> {
                               position.dy, position.dx, position.dy),
                           items: [
                             const PopupMenuItem(
-                                child: Text("Edit"), value: 'Edit'),
+                                value: 'Edit', child: Text("Edit")),
                             const PopupMenuItem(
-                                child: Text("Copy"), value: 'Copy')
+                                value: 'Copy', child: Text("Copy"))
                           ],
                         ).then((value) {
                           if (value == 'Edit') {
@@ -429,6 +465,7 @@ class _HomePasswordState extends State<HomePassword> {
               setState(() {});
               showToast(context, "请输入App名称", color: Colors.red);
             } else {
+              // add to local database
               await db.updateOrInsert(PasswordItem(
                   alias: _controllerAlias.text,
                   name: _controllerApp.text,
@@ -436,16 +473,36 @@ class _HomePasswordState extends State<HomePassword> {
                   zone: _controllerZone.text,
                   special: _controllerSpecial.text,
                   password: pwd));
-              var itemsTmp = await db.passwords(15);
+              // add to firebase realtime database
+              final user =
+                  "flower/124/${_controllerAlias.text}_${_controllerApp.text}";
+              DatabaseReference ref = FirebaseDatabase.instance.ref(user);
+              final snapshot = await ref.get();
+              if (snapshot.exists) {
+                print("exists: ${user} ${snapshot.exists}");
+              }
+              var createTime =
+                  (DateTime.now().toUtc().millisecondsSinceEpoch / 1000)
+                      .round();
+              await ref.set({
+                "app": _controllerApp.text,
+                "special": _controllerSpecial.text,
+                "alias": _controllerAlias.text,
+                "create_time": createTime,
+                "update_time": createTime,
+              });
+              // var itemsTmp = await db.passwords(15);
               setState(() {
                 _controllerPwd.text = pwd;
-                // log items info with developer mode
-                items = itemsTmp;
-                // 打印 items 信息，开发模式下
-                // ignore: avoid_print
+                // items = itemsTmp;
               });
-              // ignore: use_build_context_synchronously
-              showToast(context, "${_controllerApp.text} 密码已生成");
+              if (snapshot.exists) {
+                // ignore: use_build_context_synchronously
+                showToast(context, "${_controllerApp.text} 密码已更新");
+              } else {
+                // ignore: use_build_context_synchronously
+                showToast(context, "${_controllerApp.text} 密码已生成");
+              }
             }
           },
           label: const Text("生成密码")),
