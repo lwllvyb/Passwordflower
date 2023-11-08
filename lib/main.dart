@@ -4,14 +4,36 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
-import './db/sqlite.dart';
+// import './db/sqlite.dart';
 
-final db = FlowerDB();
+// final db = FlowerDB();
+
+class PasswordItem {
+  final String alias;
+  final String name;
+  final String key;
+  final String zone;
+  final String special;
+  final String password;
+  final String updateTime;
+
+  PasswordItem({
+    required this.alias,
+    required this.name,
+    required this.key,
+    required this.zone,
+    required this.special,
+    required this.password,
+    required this.updateTime,
+  });
+}
 
 void main() async {
-  db.open();
+//   db.open();
   //var db = FlowerDB("test");
   //await db.open();
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +81,20 @@ String getPassword(String inKey, String inCode) {
   return pwd;
 }
 
+// 保存数据
+Future<void> saveData(String key, String value) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  print("Goto save ${key} ${value}");
+  await prefs.setString(key, value);
+}
+
+// 读取数据
+Future<String?> loadData(String key) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  print("Goto load ${key}");
+  return prefs.getString(key);
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -83,6 +119,19 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+class MyWidget extends StatelessWidget {
+  const MyWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Welcome to Password Flower"),
+      ),
+      body: 
+      );
+  }
+}
 
 class HomePassword extends StatefulWidget {
   const HomePassword({Key? key}) : super(key: key);
@@ -93,21 +142,29 @@ class HomePassword extends StatefulWidget {
 }
 
 class _HomePasswordState extends State<HomePassword> {
+  final FocusNode _focusKey = FocusNode();
   final _controllerKey = TextEditingController();
-  final _controllerAlias = TextEditingController();
-  final _controllerApp = TextEditingController();
+  final FocusNode _focusZone = FocusNode();
   final _controllerZone = TextEditingController();
   final _controllerPwd = TextEditingController();
+  final _controllerAlias = TextEditingController();
+  final _controllerApp = TextEditingController();
   final _controllerSpecial = TextEditingController();
   final height = 50.0;
   final appWidth = 100.0;
   final zoneWidth = 100.0;
   final specialWidth = 100.0;
   final paddingWidth = 10.0;
+  // ignore: prefer_typing_uninitialized_variables
+  late final userId;
+  // ignore: prefer_typing_uninitialized_variables
+  late final key;
+  // ignore: prefer_typing_uninitialized_variables
+  late final zone;
 
-  late Set<PasswordItem> items_set = {};
+  late Set<PasswordItem> itemsSet = {};
   late List<PasswordItem> items = [];
-  bool _isObscure = true;
+  bool _isDone = true; // hide
   @override
   void dispose() {
     _controllerKey.dispose();
@@ -117,54 +174,54 @@ class _HomePasswordState extends State<HomePassword> {
     super.dispose();
   }
 
+  Future<bool> login() async {
+    return await logIn("mr.liwenlong@outlook.com", "12345678");
+  }
+
   void initItems() async {
-    if (!db.isOpen) {
-      await db.open();
-    }
-    // db.passwords(15).then((value) => {
-    //       setState(() {
-    //         items = value;
-    //       })
-    //     });
-    // db.getLatestKey().then((value) => {
-    //       setState(() {
-    //         _controllerKey.text = value;
-    //       })
-    //     });
-    // db.getLatestZone().then((value) => {
-    //       setState(() {
-    //         _controllerZone.text = value;
-    //       })
-    //     });
-    // db.getLatestRecord().then((value) => {
-    //       setState(() {
-    //         _controllerKey.text = value["app"].toString();
-    //         _controllerZone.text = value["zone"].toString();
-    //         _controllerSpecial.text = value["special"].toString();
-    //       })
-    //     });
-    const user = "flower/124";
+    // if (!db.isOpen) {
+    //   await db.open();
+    // }
+    await login();
+    var user = "flower/$userId";
     const keyCode = "1QAZ3edc";
     const zone = "#123";
     DatabaseReference ref = FirebaseDatabase.instance.ref(user);
-    print("TEST build");
-    ref.onValue.listen((event) {
-      Map<String, dynamic> data = event.snapshot.value as Map<String, dynamic>;
-      Set<PasswordItem> itemsSet = {};
-      data.forEach((key, value) {
-        var item = value;
-        var password =
-            getPassword(keyCode, item['app'] + zone) + item['special'];
-        print("listen item: ${item} ${item.runtimeType} password: ${password}");
-        itemsSet.add(PasswordItem(
-            alias: item['alias'],
-            name: item['app'],
-            key: key,
-            zone: zone,
-            special: item['special'],
-            password: password));
-      });
-      print("items: ${itemsSet}");
+    // var dataSnapshot = await ref.get();
+    // Object? data = dataSnapshot.value;
+    // if (data != null) {
+    //   data = data as Map<String, dynamic>;
+    //   data.forEach((key, value) {
+    //     var item = value;
+    //     var password =
+    //         getPassword(keyCode, item['app'] + zone) + item['special'];
+    //     itemsSet.add(PasswordItem(
+    //         alias: item['alias'],
+    //         name: item['app'],
+    //         key: key,
+    //         zone: zone,
+    //         special: item['special'],
+    //         password: password,
+    //         updateTime: item['update_time']));
+    //     print(
+    //         "load from database, ${item['app']} ${item['alias']} ${item['special']}");
+    //   });
+    //   setState(() {
+    //     items = itemsSet.toList();
+    //   });
+    // }
+
+    ref.onChildAdded.listen((event) {
+      Map<String, dynamic> item = event.snapshot.value as Map<String, dynamic>;
+      var password = getPassword(keyCode, item['app'] + zone) + item['special'];
+      itemsSet.add(PasswordItem(
+          alias: item['alias'],
+          name: item['app'],
+          key: keyCode,
+          zone: zone,
+          special: item['special'],
+          password: password,
+          updateTime: item['update_time']));
       setState(() {
         items = itemsSet.toList();
       });
@@ -175,6 +232,20 @@ class _HomePasswordState extends State<HomePassword> {
   void initState() {
     super.initState();
     initItems();
+    initLocalVars();
+    _focusKey.addListener(() {
+      if (!_focusKey.hasFocus && _controllerKey.text.isNotEmpty) {
+        saveData("key", _controllerKey.text);
+        setState(() {
+          _isDone = true;
+        });
+      }
+    });
+    _focusZone.addListener(() {
+      if (!_focusZone.hasFocus && _controllerZone.text.isNotEmpty) {
+        saveData("zone", _controllerZone.text);
+      }
+    });
   }
 
   void showToast(context, msg, {Color color = Colors.green}) {
@@ -227,15 +298,16 @@ class _HomePasswordState extends State<HomePassword> {
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextFormField(
                   controller: _controllerKey,
-                  obscureText: _isObscure,
+                  focusNode: _focusKey,
+                  obscureText: _isDone,
                   decoration: InputDecoration(
                     border: const OutlineInputBorder(),
                     labelText: '记忆密码',
                     suffixIcon: InkWell(
                       child: Icon(
-                        _isObscure ? Icons.visibility_off : Icons.visibility,
+                        _isDone ? Icons.edit : Icons.done,
                       ),
-                      onTap: () => setState(() => _isObscure = !_isObscure),
+                      onTap: () => {setState(() => _isDone = !_isDone)},
                     ),
                   ),
                 ),
@@ -282,6 +354,7 @@ class _HomePasswordState extends State<HomePassword> {
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextField(
                   controller: _controllerZone,
+                  focusNode: _focusZone,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: '区号',
@@ -315,6 +388,7 @@ class _HomePasswordState extends State<HomePassword> {
           //   // decoration:
           //   //     InputDecoration(border: OutlineInputBorder(), labelText: '密码'),
           // ),
+
           Container(
             margin: const EdgeInsets.symmetric(vertical: 20),
             // padding: EdgeInsets.symmetric(vertical: 10),
@@ -355,7 +429,7 @@ class _HomePasswordState extends State<HomePassword> {
                     );
                   },
                   onDismissed: (direction) async {
-                    await db.delete(items[index].name);
+                    // await db.delete(items[index].name);
                     setState(() {
                       items.removeAt(index);
                     });
@@ -392,6 +466,11 @@ class _HomePasswordState extends State<HomePassword> {
                           ],
                         ).then((value) {
                           if (value == 'Edit') {
+                            setState(() {
+                              _controllerAlias.text = items[index].alias;
+                              _controllerApp.text = items[index].name;
+                              _controllerSpecial.text = items[index].special;
+                            });
                           } else if (value == "Copy") {
                             Clipboard.setData(
                                 ClipboardData(text: items[index].password));
@@ -408,43 +487,9 @@ class _HomePasswordState extends State<HomePassword> {
                                 child: Center(child: Text(items[index].alias))),
                             Expanded(
                                 child: Center(child: Text(items[index].name))),
-
-                            // Expanded(
-                            //   child: Center(
-                            //     child: GestureDetector(
-                            //       onLongPressStart: (details) {
-                            //         final Offset position =
-                            //             details.globalPosition; // 获取长按的全局坐标
-                            //         showMenu(
-                            //           context: context,
-                            //           position: RelativeRect.fromLTRB(
-                            //               position.dx,
-                            //               position.dy,
-                            //               position.dx,
-                            //               position.dy),
-                            //           items: [
-                            //             const PopupMenuItem(
-                            //                 child: Text("Edit"), value: 'Edit'),
-                            //             const PopupMenuItem(
-                            //                 child: Text("Copy"), value: 'Copy')
-                            //           ],
-                            //         ).then((value) {
-                            //           showToast(context, "value: ${value}");
-                            //           if (value == 'Edit') {
-                            //           } else if (value == "Copy") {}
-                            //         });
-                            //       },
-                            //       child: TextButton(
-                            //         onPressed: () {
-                            //           Clipboard.setData(ClipboardData(
-                            //               text: items[index].password));
-                            //           showToast(context, "已复制到剪贴板");
-                            //         },
-                            //         child: const Text("复制密码"),
-                            //       ),
-                            //     ),
-                            //   ),
-                            // ),
+                            Expanded(
+                                child: Center(
+                                    child: Text(items[index].updateTime))),
                           ],
                         ),
                       ),
@@ -462,39 +507,90 @@ class _HomePasswordState extends State<HomePassword> {
                     _controllerApp.text + _controllerZone.text) +
                 _controllerSpecial.text;
             if (_controllerApp.text.isEmpty) {
-              setState(() {});
               showToast(context, "请输入App名称", color: Colors.red);
             } else {
-              // add to local database
-              await db.updateOrInsert(PasswordItem(
-                  alias: _controllerAlias.text,
-                  name: _controllerApp.text,
-                  key: _controllerKey.text,
-                  zone: _controllerZone.text,
-                  special: _controllerSpecial.text,
-                  password: pwd));
+              // // add to local database
+              // await db.updateOrInsert(PasswordItem(
+              //     alias: _controllerAlias.text,
+              //     name: _controllerApp.text,
+              //     key: _controllerKey.text,
+              //     zone: _controllerZone.text,
+              //     special: _controllerSpecial.text,
+              //     password: pwd));
               // add to firebase realtime database
-              final user =
-                  "flower/124/${_controllerAlias.text}_${_controllerApp.text}";
-              DatabaseReference ref = FirebaseDatabase.instance.ref(user);
+              final dbItem =
+                  "flower/$userId/${_controllerAlias.text}_${_controllerApp.text}";
+              DatabaseReference ref = FirebaseDatabase.instance.ref(dbItem);
               final snapshot = await ref.get();
+              var createTime = DateTime.now();
               if (snapshot.exists) {
-                print("exists: ${user} ${snapshot.exists}");
+                print("exists: $dbItem ${snapshot.exists}");
+                await ref.update({
+                  "special": _controllerSpecial.text,
+                  "update_time": createTime.toString(),
+                  "update_time_unix":
+                      (createTime.toUtc().millisecondsSinceEpoch / 1000)
+                          .round(),
+                });
+              } else {
+                try {
+                  await ref.set({
+                    "app": _controllerApp.text,
+                    "special": _controllerSpecial.text,
+                    "alias": _controllerAlias.text,
+                    "create_time": createTime.toString(),
+                    "create_time_unix":
+                        (createTime.toUtc().millisecondsSinceEpoch / 1000)
+                            .round(),
+                    "update_time": createTime.toString(),
+                    "update_time_unix":
+                        (createTime.toUtc().millisecondsSinceEpoch / 1000)
+                            .round(),
+                  });
+                } on FirebaseException catch (e) {
+                  // 如果是权限被拒绝错误
+                  if (e.code == 'permission-denied') {
+                    print('Permission denied for this read operation');
+                  } else {
+                    // 处理其他类型的数据库错误
+                    print('Caught a database error: $e');
+                  }
+                } catch (e) {
+                  // 捕获其他任何类型的异常
+                  print('Caught an exception: $e');
+                }
               }
-              var createTime =
-                  (DateTime.now().toUtc().millisecondsSinceEpoch / 1000)
-                      .round();
-              await ref.set({
-                "app": _controllerApp.text,
-                "special": _controllerSpecial.text,
-                "alias": _controllerAlias.text,
-                "create_time": createTime,
-                "update_time": createTime,
-              });
-              // var itemsTmp = await db.passwords(15);
+
               setState(() {
-                _controllerPwd.text = pwd;
-                // items = itemsTmp;
+                // var itemsTmp = await db.passwords(15);
+                final index = items.indexWhere((item) =>
+                    item.alias == _controllerAlias.text &&
+                    item.name == _controllerApp.text);
+                if (index != -1) {
+                  final PasswordItem newItem = PasswordItem(
+                    alias: items[index].alias,
+                    name: items[index].name,
+                    key: items[index].key,
+                    zone: items[index].zone,
+                    special: _controllerSpecial.text,
+                    password: pwd,
+                    updateTime: createTime.toString(),
+                  );
+                  items[index] = newItem;
+                  print("update ${items[index]}");
+                } else {
+                  final PasswordItem newItem = PasswordItem(
+                    alias: _controllerAlias.text,
+                    name: _controllerApp.text,
+                    key: _controllerKey.text,
+                    zone: _controllerZone.text,
+                    special: _controllerSpecial.text,
+                    password: pwd,
+                    updateTime: createTime.toString(),
+                  );
+                  items.add(newItem);
+                  print("add ${items[index]}");
+                }
               });
               if (snapshot.exists) {
                 // ignore: use_build_context_synchronously
@@ -508,5 +604,38 @@ class _HomePasswordState extends State<HomePassword> {
           label: const Text("生成密码")),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
+  }
+
+  // login
+  Future<bool> logIn(String emailAddress, String password) async {
+    try {
+      final credential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: emailAddress, password: password);
+      userId = credential.user?.uid;
+      print("login success, user id: ${userId}");
+      return true; // 登录成功
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+      }
+      return false; // 登录失败
+    }
+  }
+
+  void initLocalVars() async {
+    var key = await loadData("key");
+    if (key != null) {
+      setState(() {
+        _controllerKey.text = key;
+      });
+    }
+    var zone = await loadData("zone");
+    if (zone != null) {
+      setState(() {
+        _controllerZone.text = zone;
+      });
+    }
   }
 }
