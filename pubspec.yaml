@@ -45,9 +45,9 @@ dependencies:
   bruno:
     git:
       url: https://github.com/BingKui/bruno.git
-  firebase_core: ^2.16.0
-  firebase_database: ^10.2.6
-  firebase_auth: ^4.11.1
+  firebase_core: ^2.21.0
+  firebase_database: ^10.3.3
+  firebase_auth: ^4.12.1
   shared_preferences: ^2.2.2
 
 dev_dependencies:
@@ -60,10 +60,15 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "icons/flower.png"
 # The following section is specific to Flutter packages.
 flutter:
   # The following line ensures that the Material Icons font is
