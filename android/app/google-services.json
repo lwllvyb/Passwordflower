@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1091545420924",
+    "firebase_url": "https://protect-c29a0-default-rtdb.firebaseio.com",
+    "project_id": "protect-c29a0",
+    "storage_bucket": "protect-c29a0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1091545420924:android:3e27a6f9b49af3371825f9",
+        "android_client_info": {
+          "package_name": "com.example.florakey"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD68aFj6Td5vJbY7mjzC4KA-yCzNGWHrnM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

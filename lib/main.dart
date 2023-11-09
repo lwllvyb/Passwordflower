@@ -1,11 +1,10 @@
-import 'package:PasswordFlower/home_password.dart';
-import 'package:PasswordFlower/login_screen.dart';
+import 'package:flora_key/home_password.dart';
+import 'package:flora_key/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 // import './db/sqlite.dart';
@@ -32,6 +31,7 @@ class PasswordItem {
   });
 }
 
+// ignore: prefer_typing_uninitialized_variables
 late final curerntUser;
 
 void main() async {
@@ -81,18 +81,6 @@ String getPassword(String inKey, String inCode) {
     pwd = 'K${pwd32.substring(1, 16)}';
   }
   return pwd;
-}
-
-// 保存数据
-Future<void> saveData(String key, String value) async {
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setString(key, value);
-}
-
-// 读取数据
-Future<String?> loadData(String key) async {
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString(key);
 }
 
 class MyApp extends StatelessWidget {

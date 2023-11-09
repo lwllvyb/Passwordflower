@@ -1,7 +1,8 @@
-import 'package:PasswordFlower/login_screen.dart';
-import 'package:PasswordFlower/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flora_key/configuration_page.dart';
+import 'package:flora_key/login_screen.dart';
+import 'package:flora_key/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -29,7 +30,8 @@ class _HomePasswordState extends State<HomePassword> {
   final paddingWidth = 10.0;
   // ignore: prefer_typing_uninitialized_variables
   late final userId;
-  late final currentUser;
+  // ignore: prefer_typing_uninitialized_variables
+  late final userEmail;
   // ignore: prefer_typing_uninitialized_variables
   late final key;
   // ignore: prefer_typing_uninitialized_variables
@@ -37,7 +39,6 @@ class _HomePasswordState extends State<HomePassword> {
 
   late Set<PasswordItem> itemsSet = {};
   late List<PasswordItem> items = [];
-  bool _isDone = true; // hide
   @override
   void dispose() {
     _controllerKey.dispose();
@@ -47,23 +48,41 @@ class _HomePasswordState extends State<HomePassword> {
     super.dispose();
   }
 
+  Future<bool> checkLocalVarAndNavigate() async {
+    final keyTmp = await loadData("key");
+    final zoneTmp = await loadData("zone");
+    print("${_controllerKey.text} ${_controllerZone.text}");
+    if (!(keyTmp != null && keyTmp.isNotEmpty) ||
+        !(zoneTmp != null && zoneTmp.isNotEmpty)) {
+      // ignore: use_build_context_synchronously
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const ConfigurationPage()),
+        (Route<dynamic> route) => false,
+      );
+      return false;
+    }
+    setState(() {
+      _controllerKey.text = keyTmp;
+      _controllerZone.text = zoneTmp;
+    });
+    key = keyTmp.toString();
+    zone = zoneTmp.toString();
+    return true;
+  }
+
   void initItems() async {
-    // if (!db.isOpen) {
-    //   await db.open();
-    // }
-    // await login();
+    await checkLocalVarAndNavigate();
     var user = "flower/$userId";
-    const keyCode = "1QAZ3edc";
-    const zone = "#123";
     DatabaseReference ref = FirebaseDatabase.instance.ref(user);
 
     ref.onChildAdded.listen((event) {
       Map<String, dynamic> item = event.snapshot.value as Map<String, dynamic>;
-      var password = getPassword(keyCode, item['app'] + zone) + item['special'];
+      var password = getPassword(key, item['app'] + zone) + item['special'];
       itemsSet.add(PasswordItem(
           alias: item['alias'],
           name: item['app'],
-          key: keyCode,
+          key: key,
           zone: zone,
           special: item['special'],
           password: password,
@@ -79,14 +98,12 @@ class _HomePasswordState extends State<HomePassword> {
     super.initState();
     final currentUser = FirebaseAuth.instance.currentUser;
     userId = currentUser?.uid;
+    userEmail = currentUser?.email;
     initItems();
-    initLocalVars();
     _focusKey.addListener(() {
       if (!_focusKey.hasFocus && _controllerKey.text.isNotEmpty) {
         saveData("key", _controllerKey.text);
-        setState(() {
-          _isDone = true;
-        });
+        setState(() {});
       }
     });
     _focusZone.addListener(() {
@@ -122,29 +139,40 @@ class _HomePasswordState extends State<HomePassword> {
 
   @override
   Widget build(BuildContext context) {
-    final keyWidth = appWidth +
-        zoneWidth +
-        specialWidth +
-        paddingWidth * 2 * 2; // padding 是两边的
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Welcome to Password Flower"),
+        title: const Text("Welcome to FloraKey"),
       ),
       drawer: Drawer(
         child: ListView(
-          padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
-              child:
-                  Text('Drawer Header', style: TextStyle(color: Colors.white)),
-              decoration: BoxDecoration(
+            UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(
                 color: Colors.blue,
+              ),
+              accountName:
+                  const Text('UserInfo', style: TextStyle(color: Colors.white)),
+              accountEmail: Text(userEmail.toString()),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Image.asset(
+                  'assets/icons/flower.png',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             ListTile(
-              title: Text('Log Out'),
-              leading: Icon(Icons.exit_to_app),
+              title: const Text('Config'),
+              leading: const Icon(Icons.settings),
+              onTap: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ConfigurationPage()),
+              ), // 点击时调用_signOut方法
+            ),
+            ListTile(
+              title: const Text('Log Out'),
+              leading: const Icon(Icons.exit_to_app),
               onTap: () => _signOut(context), // 点击时调用_signOut方法
             ),
           ],
@@ -155,32 +183,7 @@ class _HomePasswordState extends State<HomePassword> {
         children: <Widget>[
           Padding(padding: EdgeInsets.all(paddingWidth)),
           // add tow rows, first row is input key, second row is input app and zone, and a button. when click, it will check input and call getPassword, two rows have same width
-          Wrap(
-            alignment: WrapAlignment.center,
-            children: <Widget>[
-              Container(
-                height: height,
-                width: keyWidth,
-                margin:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                child: TextFormField(
-                  controller: _controllerKey,
-                  focusNode: _focusKey,
-                  obscureText: _isDone,
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    labelText: '记忆密码',
-                    suffixIcon: InkWell(
-                      child: Icon(
-                        _isDone ? Icons.edit : Icons.done,
-                      ),
-                      onTap: () => {setState(() => _isDone = !_isDone)},
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+
           // Padding(padding: EdgeInsets.all(paddingWidth)),
           Wrap(
             alignment: WrapAlignment.center,
@@ -188,7 +191,7 @@ class _HomePasswordState extends State<HomePassword> {
               // 两个输入框相同宽度，并且之间有一定间距
               Container(
                 height: height,
-                width: appWidth,
+                width: 200,
                 margin:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextField(
@@ -201,7 +204,7 @@ class _HomePasswordState extends State<HomePassword> {
               ),
               Container(
                 height: height,
-                width: appWidth,
+                width: 100,
                 margin:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 child: TextField(
@@ -212,27 +215,9 @@ class _HomePasswordState extends State<HomePassword> {
                   ),
                 ),
               ),
-              // 占位符
-              // Padding(padding: EdgeInsets.all(paddingWidth)),
               Container(
                 height: height,
-                width: zoneWidth,
-                margin:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                child: TextField(
-                  controller: _controllerZone,
-                  focusNode: _focusZone,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '区号',
-                  ),
-                ),
-              ),
-              // add SizedBox controller is _controllerSpecial, width is 100, height is 100, decoration is border, labelText is '特殊字符'
-              // Padding(padding: EdgeInsets.all(paddingWidth)),
-              Container(
-                height: height,
-                width: specialWidth,
+                width: 100,
                 margin:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 // padding: EdgeInsets.symmetric(vertical: 10),
@@ -247,14 +232,6 @@ class _HomePasswordState extends State<HomePassword> {
               // add a button, when click, it will check input and call getPassword, align center and has same height with input
             ],
           ),
-
-          // TextField(
-          //   readOnly: true,
-          //   controller: _controllerPwd,
-          //   textAlign: TextAlign.center,
-          //   // decoration:
-          //   //     InputDecoration(border: OutlineInputBorder(), labelText: '密码'),
-          // ),
 
           Container(
             margin: const EdgeInsets.symmetric(vertical: 20),
@@ -481,21 +458,6 @@ class _HomePasswordState extends State<HomePassword> {
         print('Wrong password provided for that user.');
       }
       return false; // 登录失败
-    }
-  }
-
-  void initLocalVars() async {
-    var key = await loadData("key");
-    if (key != null) {
-      setState(() {
-        _controllerKey.text = key;
-      });
-    }
-    var zone = await loadData("zone");
-    if (zone != null) {
-      setState(() {
-        _controllerZone.text = zone;
-      });
     }
   }
 

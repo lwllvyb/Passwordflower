@@ -70,7 +70,7 @@ class DefaultFirebaseOptions {
     projectId: 'protect-c29a0',
     databaseURL: 'https://protect-c29a0-default-rtdb.firebaseio.com',
     storageBucket: 'protect-c29a0.appspot.com',
-    iosBundleId: 'com.example.flower',
+    iosBundleId: 'com.example.florakey',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -80,6 +80,6 @@ class DefaultFirebaseOptions {
     projectId: 'protect-c29a0',
     databaseURL: 'https://protect-c29a0-default-rtdb.firebaseio.com',
     storageBucket: 'protect-c29a0.appspot.com',
-    iosBundleId: 'com.example.flower.RunnerTests',
+    iosBundleId: 'com.example.florakey.RunnerTests',
   );
 }
