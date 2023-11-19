@@ -89,6 +89,11 @@ class _HomePasswordState extends State<HomePassword> {
           updateTime: item['update_time']));
       setState(() {
         items = itemsSet.toList();
+        items.sort((a, b) {
+          DateTime dateA = DateTime.parse(a.updateTime);
+          DateTime dateB = DateTime.parse(b.updateTime);
+          return dateB.compareTo(dateA); // 为了让最新的日期排在前面
+        });
       });
     });
   }
@@ -162,14 +167,16 @@ class _HomePasswordState extends State<HomePassword> {
               ),
             ),
             ListTile(
-              title: const Text('Config'),
-              leading: const Icon(Icons.settings),
-              onTap: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ConfigurationPage()),
-              ), // 点击时调用_signOut方法
-            ),
+                title: const Text('Config'),
+                leading: const Icon(Icons.settings),
+                onTap: () => {
+                      Navigator.of(context).pop(),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ConfigurationPage()),
+                      ), // 点击时调用_signOut方法
+                    }),
             ListTile(
               title: const Text('Log Out'),
               leading: const Icon(Icons.exit_to_app),
@@ -247,89 +254,105 @@ class _HomePasswordState extends State<HomePassword> {
               padding: const EdgeInsets.symmetric(vertical: 2),
               itemCount: items.length,
               itemBuilder: (BuildContext context, int index) {
-                return Dismissible(
-                  key: Key(items[index].name),
-                  direction: DismissDirection.endToStart,
-                  confirmDismiss: (direction) async {
-                    return await showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text("确认删除"),
-                          content: const Text("您确定要删除此项吗？"),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text("取消"),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text("删除"),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  onDismissed: (direction) async {
-                    // await db.delete(items[index].name);
-                    setState(() {
-                      items.removeAt(index);
-                    });
-                    // ignore: use_build_context_synchronously
-                    showToast(context, "${items[index].name} 已删除");
-                  },
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  child: GestureDetector(
-                    onLongPressStart: (details) {
-                      final Offset position =
-                          details.globalPosition; // 获取长按的全局坐标
-                      showMenu(
-                        context: context,
-                        position: RelativeRect.fromLTRB(
-                            position.dx, position.dy, position.dx, position.dy),
-                        items: [
-                          const PopupMenuItem(
-                              value: 'Edit', child: Text("Edit")),
-                          const PopupMenuItem(
-                              value: 'Copy', child: Text("Copy"))
-                        ],
-                      ).then((value) {
-                        if (value == 'Edit') {
-                          setState(() {
-                            _controllerAlias.text = items[index].alias;
-                            _controllerApp.text = items[index].name;
-                            _controllerSpecial.text = items[index].special;
-                          });
-                        } else if (value == "Copy") {
-                          Clipboard.setData(
-                              ClipboardData(text: items[index].password));
-                          showToast(
-                              context, "${items[index].alias} 密码, 已复制到剪贴板");
-                        }
-                      });
+                return ExpansionTile(
+                  title: InkWell(
+                    onTap: () {
+                      Clipboard.setData(
+                          ClipboardData(text: items[index].password));
+                      // 显示提示信息
+                      showToast(context, "${_controllerApp.text} 已复制");
                     },
-                    child: ExpansionTile(
-                      title: Row(
-                        children: <Widget>[
-                          // Add your widgets here
-                          Expanded(
-                              child: Center(child: Text(items[index].alias))),
-                          Expanded(
-                              child: Center(child: Text(items[index].name))),
-                          Expanded(
-                              child: Center(child: Text(items[index].special))),
-                          Expanded(
-                              child:
-                                  Center(child: Text(items[index].updateTime))),
-                        ],
-                      ),
+                    child: Row(
+                      children: <Widget>[
+                        // Add your widgets here
+                        Expanded(
+                            child: Center(
+                                child: Text(items[index].alias,
+                                    overflow: TextOverflow.ellipsis))),
+                        Expanded(
+                            child: Center(
+                                child: Text(
+                          items[index].name,
+                          overflow: TextOverflow.ellipsis,
+                        ))),
+                        Expanded(
+                            child: Center(
+                                child: Text(
+                          items[index].special,
+                          overflow: TextOverflow.ellipsis,
+                        ))),
+                        Expanded(
+                            child: Center(
+                                child: Text(
+                          items[index].updateTime,
+                          overflow: TextOverflow.ellipsis,
+                        ))),
+                      ],
                     ),
+                  ),
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (String result) async {
+                      if (result == 'edit') {
+                        // 编辑逻辑
+                        setState(() {
+                          _controllerAlias.text = items[index].alias;
+                          _controllerApp.text = items[index].name;
+                          _controllerSpecial.text = items[index].special;
+                        });
+                      } else if (result == 'delete') {
+                        // 删除逻辑
+                        // 弹出确认对话框
+                        bool confirm = await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text("确认删除"),
+                                  content: const Text("您确定要删除此项吗？"),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context)
+                                          .pop(false), // 返回 false
+                                      child: const Text("取消"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context)
+                                          .pop(true), // 返回 true
+                                      child: const Text("删除"),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ) ??
+                            false; // 对话框关闭时默认为 false
+
+                        if (confirm) {
+                          // 执行删除操作
+                          final dbItem =
+                              "flower/$userId/${items[index].alias}_${items[index].name}";
+                          DatabaseReference ref =
+                              FirebaseDatabase.instance.ref(dbItem);
+                          final snapshot = await ref.get();
+                          if (snapshot.exists) {
+                            ref.remove();
+                          }
+                          setState(() {
+                            items.removeAt(index);
+                          });
+                        }
+                      }
+                    },
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<String>>[
+                      const PopupMenuItem<String>(
+                        value: 'edit',
+                        child: Text('编辑'),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Text('删除'),
+                      ),
+                      // ... 可以添加更多选项 ...
+                    ],
                   ),
                 );
               },
@@ -363,7 +386,6 @@ class _HomePasswordState extends State<HomePassword> {
               final snapshot = await ref.get();
               var createTime = DateTime.now();
               if (snapshot.exists) {
-                print("exists: $dbItem ${snapshot.exists}");
                 await ref.update({
                   "special": _controllerSpecial.text,
                   "update_time": createTime.toString(),
@@ -427,6 +449,11 @@ class _HomePasswordState extends State<HomePassword> {
                     updateTime: createTime.toString(),
                   );
                   items.add(newItem);
+                  items.sort((a, b) {
+                    DateTime dateA = DateTime.parse(a.updateTime);
+                    DateTime dateB = DateTime.parse(b.updateTime);
+                    return dateB.compareTo(dateA); // 为了让最新的日期排在前面
+                  });
                   print("add ${items[index]}");
                 }
               });

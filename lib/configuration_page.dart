@@ -81,7 +81,6 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
   void checkInputAndNavigate() async {
     final key = await loadData("key");
     final zone = await loadData("zone");
-    print("${widget.fromLogin} ${_controllerKey.text} ${_controllerZone.text}");
     if (key != null && key.isNotEmpty && zone != null && zone.isNotEmpty) {
       // ignore: use_build_context_synchronously
       Navigator.pushAndRemoveUntil(
@@ -97,6 +96,13 @@ class _ConfigurationPageState extends State<ConfigurationPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('配置页面'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // 执行返回操作
+            Navigator.of(context).pop();
+          },
+        ),
       ),
       body: Center(
         child: Padding(
