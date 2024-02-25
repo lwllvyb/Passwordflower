@@ -3,7 +3,21 @@ import 'package:flora_key/configuration_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_login/flutter_login.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 // import 'dashboard_screen.dart';
+
+const List<String> scopes = <String>[
+  'email',
+  'https://www.googleapis.com/auth/contacts.readonly',
+];
+GoogleSignIn googleSignIn = GoogleSignIn(
+  // Optional clientId
+  // clientId: 'your-client_id.apps.googleusercontent.com',
+  scopes: scopes,
+);
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,7 +36,82 @@ class _LoginScreenState extends State<LoginScreen> {
     'dribbble@gmail.com': '12345',
     'hunter@gmail.com': 'hunter',
   };
-  // const LoginScreen({super.key});
+
+  Future<UserCredential> signInWithGooglePhone() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    // Once signed in, return the UserCredential
+    return await FirebaseAuth.instance.signInWithCredential(credential);
+  }
+
+  Future<UserCredential> signInWithGoogleWeb() async {
+    // Create a new provider
+    GoogleAuthProvider googleProvider = GoogleAuthProvider();
+
+    googleProvider
+        .addScope('https://www.googleapis.com/auth/contacts.readonly');
+    googleProvider.setCustomParameters({'login_hint': 'user@example.com'});
+
+    // Once signed in, return the UserCredential
+    return await FirebaseAuth.instance.signInWithPopup(googleProvider);
+
+    // Or use signInWithRedirect
+    // return await FirebaseAuth.instance.signInWithRedirect(googleProvider);
+  }
+
+  bool isSignedIn = false;
+  Future<String?> signInWithGoogle() {
+    return Future.delayed(loginTime).then((_) async {
+      try {
+        if (kIsWeb) {
+          final UserCredential userCredential = await signInWithGoogleWeb();
+          // Handle successful sign-in (e.g., navigate to main app screen)
+        } else {
+          final UserCredential userCredential = await signInWithGooglePhone();
+          // Handle successful sign-in (e.g., navigate to main app screen)
+        }
+        // final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+        // // Get the user's ID token
+        // final GoogleSignInAuthentication googleAuth =
+        //     await googleUser!.authentication;
+        // final String idToken = googleAuth.idToken!;
+        // final credential = GoogleAuthProvider.credential(
+        //     accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
+
+        // try {
+        // final UserCredential userCredential =
+        //     await FirebaseAuth.instance.signInWithCredential(credential);
+        // Handle successful sign-in (e.g., navigate to main app screen)
+        // } on FirebaseAuthException catch (e) {
+        // Handle sign-in error (e.g., display error message)
+        // }
+
+        // Use the ID token to authenticate with your backend server
+        // ...
+
+        // Update the UI to show the user is signed in
+        setState(() {
+          isSignedIn = true;
+        });
+        return null;
+      } catch (error) {
+        return 'Gmail Login Fail!';
+        // Handle error
+      }
+    });
+  } // const LoginScreen({super.key});
 
   Duration get loginTime => const Duration(milliseconds: 2250);
 
@@ -82,6 +171,28 @@ class _LoginScreenState extends State<LoginScreen> {
       logo: const AssetImage('images/ecorp-lightblue.png'),
       onLogin: _authUser,
       onSignup: _signupUser,
+      loginProviders: <LoginProvider>[
+        LoginProvider(
+          icon: FontAwesomeIcons.google,
+          label: 'Google',
+          callback: signInWithGoogle,
+          // callback: () async {
+          //   debugPrint('start google sign in');
+          //   await Future.delayed(loginTime);
+          //   debugPrint('stop google sign in');
+          //   return null;
+          // },
+        ),
+        LoginProvider(
+          icon: FontAwesomeIcons.githubAlt,
+          callback: () async {
+            debugPrint('start github sign in');
+            await Future.delayed(loginTime);
+            debugPrint('stop github sign in');
+            return null;
+          },
+        ),
+      ],
       onSubmitAnimationCompleted: () {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => const ConfigurationPage(
