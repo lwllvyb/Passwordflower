@@ -39,8 +39,13 @@ class _HomePasswordState extends State<HomePassword> {
 
   late Set<PasswordItem> itemsSet = {};
   late List<PasswordItem> items = [];
+
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void dispose() {
+    _searchController.dispose();
     _controllerKey.dispose();
     _controllerApp.dispose();
     _controllerZone.dispose();
@@ -170,6 +175,30 @@ class _HomePasswordState extends State<HomePassword> {
 
           // Padding(padding: EdgeInsets.all(paddingWidth)),
           inputEdit(),
+          Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    labelText: '搜索 Alias 或 App',
+                    suffixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ),
 
           Container(
             margin: const EdgeInsets.symmetric(vertical: 20),
@@ -183,40 +212,57 @@ class _HomePasswordState extends State<HomePassword> {
               scrollDirection: Axis.vertical,
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(vertical: 2),
-              itemCount: items.length,
+              itemCount: items
+                  .where((item) =>
+                      item.alias
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase()) ||
+                      item.name
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase()))
+                  .length,
               itemBuilder: (BuildContext context, int index) {
+                final filteredItems = items
+                    .where((item) =>
+                        item.alias
+                            .toLowerCase()
+                            .contains(_searchQuery.toLowerCase()) ||
+                        item.name
+                            .toLowerCase()
+                            .contains(_searchQuery.toLowerCase()))
+                    .toList();
+                final item = filteredItems[index];
                 return ExpansionTile(
                   title: InkWell(
                     onTap: () {
-                      Clipboard.setData(
-                          ClipboardData(text: items[index].password));
+                      Clipboard.setData(ClipboardData(text: item.password));
                       // 显示提示信息
-                      showToast(context, "${_controllerApp.text} 已复制");
+                      showToast(context, "${item.name} 已复制");
                     },
                     child: Row(
                       children: <Widget>[
                         // Add your widgets here
                         Expanded(
                             child: Center(
-                                child: Text(items[index].alias,
+                                child: Text(item.alias,
                                     overflow: TextOverflow.ellipsis))),
                         Expanded(
                             child: Center(
                                 child: Text(
-                          items[index].name,
+                          item.name,
                           overflow: TextOverflow.ellipsis,
                         ))),
                         if (screenWidth > 600) ...[
                           Expanded(
                               child: Center(
                                   child: Text(
-                            items[index].special,
+                            item.special,
                             overflow: TextOverflow.ellipsis,
                           ))),
                           Expanded(
                               child: Center(
                                   child: Text(
-                            items[index].updateTime,
+                            item.updateTime,
                             overflow: TextOverflow.ellipsis,
                           ))),
                         ],
