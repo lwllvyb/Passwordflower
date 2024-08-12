@@ -83,9 +83,11 @@ class _HomePasswordState extends State<HomePassword> {
 
     ref.onChildAdded.listen((event) {
       Map<String, dynamic> item = event.snapshot.value as Map<String, dynamic>;
+      // Replace "^^" with "." when retrieving from database
+      String aliasForUi = item['alias'].toString().replaceAll("^^", ".");
       var password = getPassword(key, item['app'] + zone) + item['special'];
       itemsSet.add(PasswordItem(
-          alias: item['alias'],
+          alias: aliasForUi,
           name: item['app'],
           key: key,
           zone: zone,
@@ -293,17 +295,12 @@ class _HomePasswordState extends State<HomePassword> {
           if (_controllerApp.text.isEmpty) {
             showToast(context, "请输入App名称", color: Colors.red);
           } else {
-            // // add to local database
-            // await db.updateOrInsert(PasswordItem(
-            //     alias: _controllerAlias.text,
-            //     name: _controllerApp.text,
-            //     key: _controllerKey.text,
-            //     zone: _controllerZone.text,
-            //     special: _controllerSpecial.text,
-            //     password: pwd));
+            // Replace "." with "^^" before saving to database
+            String aliasForDb = _controllerAlias.text.replaceAll(".", "^^");
+
             // add to firebase realtime database
             final dbItem =
-                "flower/$userId/${_controllerAlias.text}_${_controllerApp.text}";
+                "flower/$userId/${aliasForDb}_${_controllerApp.text}";
             DatabaseReference ref = FirebaseDatabase.instance.ref(dbItem);
             final snapshot = await ref.get();
             var createTime = DateTime.now();
@@ -319,7 +316,7 @@ class _HomePasswordState extends State<HomePassword> {
                 await ref.set({
                   "app": _controllerApp.text,
                   "special": _controllerSpecial.text,
-                  "alias": _controllerAlias.text,
+                  "alias": aliasForDb,
                   "create_time": createTime.toString(),
                   "create_time_unix":
                       (createTime.toUtc().millisecondsSinceEpoch / 1000)
@@ -344,7 +341,6 @@ class _HomePasswordState extends State<HomePassword> {
             }
 
             setState(() {
-              // var itemsTmp = await db.passwords(15);
               final index = items.indexWhere((item) =>
                   item.alias == _controllerAlias.text &&
                   item.name == _controllerApp.text);
@@ -396,7 +392,7 @@ class _HomePasswordState extends State<HomePassword> {
         if (result == 'edit') {
           // 编辑逻辑
           setState(() {
-            _controllerAlias.text = items[index].alias;
+            _controllerAlias.text = items[index].alias.replaceAll("^^", ".");
             _controllerApp.text = items[index].name;
             _controllerSpecial.text = items[index].special;
           });
@@ -428,8 +424,8 @@ class _HomePasswordState extends State<HomePassword> {
 
           if (confirm) {
             // 执行删除操作
-            final dbItem =
-                "flower/$userId/${items[index].alias}_${items[index].name}";
+            String aliasForDb = items[index].alias.replaceAll(".", "^^");
+            final dbItem = "flower/$userId/${aliasForDb}_${items[index].name}";
             DatabaseReference ref = FirebaseDatabase.instance.ref(dbItem);
             final snapshot = await ref.get();
             if (snapshot.exists) {
